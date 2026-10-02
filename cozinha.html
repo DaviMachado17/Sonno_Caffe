@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cozinha - Sonno Caffe</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+.ped{background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px}
+.ped h3{margin:0 0 4px;font-size:1.5rem;color:var(--acc)}
+.ped small{color:var(--mut)}
+.ped ul{margin:8px 0}
+.ped button{width:100%;padding:12px;background:var(--acc);color:var(--on-acc);font-size:1rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Cozinha</h1>
+  <p class="sub" id="estado">A ligar...</p>
+  <div class="cols">
+    <section><h2>A preparar</h2><div id="novo"></div></section>
+    <section><h2>Prontos</h2><div id="pronto"></div></section>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+
+async function mudar(id, estado){
+  await fetch(`/api/pedidos/${id}/estado`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({estado})});
+  carregar();
+}
+function cartao(p, proximo, rotulo){
+  const d = document.createElement("div"); d.className = "ped";
+  const h = document.createElement("h3"); h.textContent = "Pedido " + p.id;
+  const s = document.createElement("small"); s.textContent = p.modo + " · " + p.criado_em.slice(11, 16);
+  const ul = document.createElement("ul");
+  p.itens.forEach(i => { const li = document.createElement("li"); li.textContent = i.quantidade + "x " + i.produto; ul.append(li); });
+  const b = document.createElement("button"); b.textContent = rotulo; b.onclick = () => mudar(p.id, proximo);
+  d.append(h, s, ul, b);
+  return d;
+}
+async function carregar(){
+  try{
+    const r = await fetch("/api/pedidos?estado=novo,pronto");
+    const lista = await r.json();
+    $("novo").replaceChildren(...lista.filter(p => p.estado === "novo").map(p => cartao(p, "pronto", "Marcar como pronto")));
+    $("pronto").replaceChildren(...lista.filter(p => p.estado === "pronto").map(p => cartao(p, "entregue", "Entregue")));
+    $("estado").textContent = "Ligado. Atualiza sozinho a cada 3 segundos.";
+  }catch(e){ $("estado").textContent = "Sem ligação ao servidor."; }
+}
+carregar(); setInterval(carregar, 3000);
+</script>
+</body>
+</html>
