@@ -1,18 +1,23 @@
 <!DOCTYPE html>
+<!-- index.html (linguagem: HTML) - o ecrã do cliente.
+     HTML só diz O QUE existe na página. O aspeto está no style.css
+     e o comportamento (cliques, carrinho) está no script.js. -->
 <html lang="pt-PT">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sonno Caffe</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sonno Caffe</title>
+  <link rel="stylesheet" href="style.css"> <!-- liga o ficheiro de estilos -->
 </head>
 <body>
 <main>
+  <!-- Topo: logótipo (escondido até existir) e nome -->
   <header class="top">
     <img id="logo" alt="Logótipo Sonno Caffe" hidden>
     <div><h1>Sonno Caffe</h1><p class="sub">Peça aqui. Os produtos e preços são de exemplo.</p></div>
   </header>
 
+  <!-- ECRÃ 1: escolher onde vai comer -->
   <section id="s1">
     <p>Onde vai comer?</p>
     <div class="big">
@@ -21,13 +26,14 @@
     </div>
   </section>
 
+  <!-- ECRÃ 2: menu (esquerda) e carrinho (direita). Começa escondido. -->
   <section id="s2" hidden>
-    <div class="tabs" id="tabs"></div>
+    <div class="tabs" id="tabs"></div>         <!-- separadores das categorias (o JS preenche) -->
     <div class="layout">
-      <div class="grid" id="grid"></div>
+      <div class="grid" id="grid"></div>       <!-- produtos (o JS preenche) -->
       <aside>
         <h2>O seu pedido (<span id="mode"></span>)</h2>
-        <ul id="cart"></ul>
+        <ul id="cart"></ul>                    <!-- linhas do carrinho (o JS preenche) -->
         <p id="empty" class="sub">Ainda não escolheu nada.</p>
         <div class="total"><span>Total</span><span id="total">0,00 €</span></div>
         <button class="pay" id="pay" disabled>Pagar com cartão</button>
@@ -36,6 +42,7 @@
     </div>
   </section>
 
+  <!-- ECRÃ 3: pedido feito, mostra o número. Começa escondido. -->
   <section id="s3" class="done" hidden>
     <p>Pagamento aceite. O número do seu pedido é</p>
     <div class="num" id="num"></div>
@@ -44,122 +51,6 @@
   </section>
 </main>
 
-<script>
-/* =====================================================================
-   CONFIGURAÇÃO: É AQUI QUE SE MUDAM OS PRODUTOS E AS IMAGENS
-   ---------------------------------------------------------------------
-   1. Cria uma pasta "img" ao lado deste ficheiro HTML.
-   2. Coloca lá as tuas fotos (ex.: img/classico.jpg).
-   3. Em cada produto abaixo, o 3.º valor é o caminho da imagem.
-      Formato:  ["Nome do produto", preço, "img/ficheiro.jpg"]
-   Se o ficheiro não existir, aparece uma caixa "Sem imagem".
-   ===================================================================== */
-
-// Logótipo (aparece no topo). Deixa "" para não mostrar nenhum.
-const LOGO = "img/logo.png";
-
-const MENU = {
-  "Hambúrgueres":[
-    ["Clássico",        3.9, "img/classico.jpg"],
-    ["Duplo queijo",    5.2, "img/duplo-queijo.jpg"],
-    ["Frango crocante", 4.6, "img/frango-crocante.jpg"],
-    ["Vegetariano",     4.8, "img/vegetariano.jpg"]
-  ],
-  "Acompanhamentos":[
-    ["Batatas pequenas", 1.9, "img/batatas-pequenas.jpg"],
-    ["Batatas grandes",  2.6, "img/batatas-grandes.jpg"],
-    ["Nuggets (6)",      3.4, "img/nuggets.jpg"],
-    ["Salada",           2.8, "img/salada.jpg"]
-  ],
-  "Bebidas":[
-    ["Refrigerante",   1.9, "img/refrigerante.jpg"],
-    ["Água",           1.2, "img/agua.jpg"],
-    ["Sumo de laranja",2.3, "img/sumo-laranja.jpg"],
-    ["Café",           1.1, "img/cafe.jpg"]
-  ],
-  "Sobremesas":[
-    ["Gelado",       1.8, "img/gelado.jpg"],
-    ["Tarte de maçã",1.7, "img/tarte-maca.jpg"],
-    ["Brownie",      2.1, "img/brownie.jpg"]
-  ]
-};
-/* ================== FIM DA CONFIGURAÇÃO ================== */
-const $=id=>document.getElementById(id);
-const fmt=n=>n.toFixed(2).replace(".",",")+" €";
-let mode="", cat=Object.keys(MENU)[0], cart={}, last=100;
-function renderLogo(){
-  const el=$("logo");
-  if(!LOGO){el.hidden=true;return}
-  el.src=LOGO; el.hidden=false;
-  el.onerror=()=>{el.hidden=true};
-}
-
-function show(id){["s1","s2","s3"].forEach(s=>$(s).hidden=s!==id)}
-
-function renderTabs(){
-  $("tabs").innerHTML="";
-  Object.keys(MENU).forEach(c=>{
-    const b=document.createElement("button");
-    b.textContent=c; b.setAttribute("aria-pressed",c===cat);
-    b.onclick=()=>{cat=c;renderTabs();renderGrid()};
-    $("tabs").append(b);
-  });
-}
-function renderGrid(){
-  $("grid").innerHTML="";
-  MENU[cat].forEach(([name,price,img])=>{
-    const b=document.createElement("button");
-    b.className="item";
-    const pic=img?`<img src="${img}" alt="${name}" onerror="this.outerHTML='<div class=ph>Sem imagem</div>'">`:`<div class="ph">Sem imagem</div>`;
-    b.innerHTML=`${pic}<b>${name}</b><span>${fmt(price)}</span>`;
-    b.onclick=()=>add(name,price);
-    $("grid").append(b);
-  });
-}
-function add(name,price){
-  cart[name]=cart[name]||{price,qty:0};
-  cart[name].qty++; renderCart();
-}
-function change(name,d){
-  cart[name].qty+=d;
-  if(cart[name].qty<=0) delete cart[name];
-  renderCart();
-}
-function renderCart(){
-  const ul=$("cart"); ul.innerHTML="";
-  let total=0;
-  Object.entries(cart).forEach(([name,{price,qty}])=>{
-    total+=price*qty;
-    const li=document.createElement("li");
-    li.innerHTML=`<span>${name}</span><div><button aria-label="Retirar ${name}">−</button><b>${qty}</b><button aria-label="Adicionar ${name}">+</button></div>`;
-    const [minus,plus]=li.querySelectorAll("button");
-    minus.onclick=()=>change(name,-1); plus.onclick=()=>change(name,1);
-    ul.append(li);
-  });
-  $("total").textContent=fmt(total);
-  $("empty").hidden=total>0;
-  $("pay").disabled=total===0;
-}
-function start(){cart={};cat=Object.keys(MENU)[0];renderTabs();renderGrid();renderCart();$("mode").textContent=mode;show("s2")}
-
-renderLogo();
-document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;start()});
-$("reset").onclick=()=>{cart={};show("s1")};
-$("pay").onclick=async()=>{
-  // Envia o pedido ao servidor (app.py), que o guarda na base de dados
-  const itens=Object.entries(cart).map(([nome,{price,qty}])=>({nome,preco:price,qtd:qty}));
-  try{
-    const r=await fetch("/api/pedidos",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({modo:mode,itens})});
-    if(!r.ok) throw new Error();
-    $("num").textContent=(await r.json()).numero;
-  }catch(e){
-    alert("Não foi possível enviar o pedido para a cozinha. Chame um funcionário.");
-    return;
-  }
-  $("where").textContent=mode==="No local"?"Sente-se e aguarde. Chamamos o seu número.":"Aguarde junto ao balcão de recolha.";
-  show("s3");
-};
-$("again").onclick=()=>show("s1");
-</script>
+<script src="script.js"></script> <!-- liga o JavaScript (tem de ficar no fim) -->
 </body>
 </html>

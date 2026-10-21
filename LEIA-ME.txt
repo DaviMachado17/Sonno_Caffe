@@ -1,0 +1,15 @@
+SONNO CAFFE - COMO USAR
+1) Instalar (1 vez):   pip install -r requirements.txt
+2) Correr:             python app.py
+3) Quiosque:           http://localhost:5000
+   Cozinha:            http://localhost:5000/cozinha
+
+FICHEIROS (cada um tem comentários a explicar o código)
+index.html    HTML        ecrã do cliente
+cozinha.html  HTML        ecrã da cozinha
+style.css     CSS         cores e aspeto
+script.js     JAVASCRIPT  quiosque (menu, carrinho, envio) - AQUI MUDAS PRODUTOS E IMAGENS
+cozinha.js    JAVASCRIPT  ecrã da cozinha
+app.py        PYTHON      servidor
+schema.sql    SQL         tabelas da base de dados
+img/                      as tuas fotos
